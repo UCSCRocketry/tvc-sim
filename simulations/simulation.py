@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 
 # define the simulation settings
-#test commit 1
 dt = 0.01
 total_time = 10.0
 gravity = 9.81
