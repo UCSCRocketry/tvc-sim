@@ -1,3 +1,5 @@
+# libraries
+import numpy as np
 import matplotlib.pyplot as plt
 
 # define the simulation settings
