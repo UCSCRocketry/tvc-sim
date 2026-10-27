@@ -18,20 +18,40 @@ upward_acceleration = 15.0
 
 # create lists to store results for plotting
 times = []
-heights = []
+current_heights = []
 velocities = []
+
+# PID
+kp = 0.8
+ki = 0.0
+kd = 0.8
+
+integral_error = 0.0
+max_upward_acceleration = 20.0
 
 # run the simulation one small time step at a time
 for step in range(int(total_time / dt)):
     time = step * dt
 
-    # apply the fictional upward acceleration for the first two seconds
+    error = target_height - current_height
+
+    integral_error += error * dt
+
+    p = kp * error
+    i = ki * integral_error
+    d = -kd * velocity
+
+    target_acceleration = gravity + p + i + d
+
     # afterward, only gravity affects the rocket's motion
     if time < 2.0:
         acceleration = upward_acceleration - gravity
     else:
         acceleration = -gravity
 
+    upward_acceleration = max(0.0, min(max_upward_acceleration, target_acceleration))
+    acceleration = upward_acceleration - gravity
+    
     # update velocity based on acceleration and elapsed time
     velocity += acceleration * dt
 
@@ -46,15 +66,14 @@ for step in range(int(total_time / dt)):
         if velocity < 0:
             velocity = 0.0
 
-    
 
     # save the current values for plotting
     times.append(time)
-    heights.append(current_height)
+    current_heights.append(current_height)
     velocities.append(velocity)
 
 # create a graph showing the rocket's height over time
-plt.plot(times, heights, label="rocket height")
+plt.plot(times, current_heights, label="rocket height")
 plt.xlabel("time (seconds)")
 plt.ylabel("height (meters)")
 plt.title("basic 1d rocket motion simulation")
