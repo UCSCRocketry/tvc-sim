@@ -7,7 +7,7 @@ dt = 0.01
 total_time = 10.0
 gravity = 9.81
 
-gravity_sim = np.array([0.0, 0.0, -gravity])  # gravity vector
+gravity_sim = np.array([0.0, 0.0, -gravity])
 
 # xyz position
 xyz_position = np.array([0.0, 0.0, 0.0])
@@ -18,10 +18,10 @@ velocity = np.array([0.0, 0.0, 0.0])
 # define the rocket's initial state
 current_height = 0.0
 target_position = np.array([5.0, 3.0, 10.0])
-mass = 1
+mass = 1.0
 
-# define a fictional upward acceleration
-upward_acceleration = 15.0
+# define maximum upward acceleration
+max_upward_acceleration = 20.0
 
 # create lists to store results for plotting
 times = []
@@ -34,18 +34,26 @@ ki = 0.0
 kd = 0.8
 
 integral_error = np.zeros(3)
-max_upward_acceleration = 20.0
+integral_limit = np.array([5.0, 5.0, 5.0])
 
 # run the simulation one small time step at a time
 for step in range(int(total_time / dt)):
     time = step * dt
 
-    # calculate error in all 3 dimensions
+    # calculate error in xyz
     error = target_position - xyz_position
 
+    # calculate accumulated error
     integral_error += error * dt
 
-    # PID calculation
+    # prevent integral error
+    integral_error = np.clip(
+        integral_error,
+        -integral_limit,
+        integral_limit
+    )
+
+    # PID
     p = kp * error
     i = ki * integral_error
     d = -kd * velocity
@@ -97,7 +105,7 @@ positions = np.array(positions)
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
-# plot the 3d trajectory
+# plot 3d 
 ax.plot(
     positions[:, 0],
     positions[:, 1],
