@@ -28,13 +28,12 @@ times = []
 positions = []
 velocities = []
 
-# PID
+# PID Gains (ki is now active)
 kp = 0.8
-ki = 0.0
+ki = 0.4
 kd = 0.8
 
 integral_error = np.zeros(3)
-integral_limit = np.array([5.0, 5.0, 5.0])
 
 # run the simulation one small time step at a time
 for step in range(int(total_time / dt)):
@@ -43,29 +42,26 @@ for step in range(int(total_time / dt)):
     # calculate error in xyz
     error = target_position - xyz_position
 
-    # calculate accumulated error
-    integral_error += error * dt
-
-    # prevent integral error
-    integral_error = np.clip(
-        integral_error,
-        -integral_limit,
-        integral_limit
-    )
-
-    # PID
+    # Pid
     p = kp * error
-    i = ki * integral_error
     d = -kd * velocity
 
+    proposed_integral_error = integral_error + (error * dt)
+    i = ki * proposed_integral_error
+
+    # target thrust acceleration
     target_acceleration = p + i + d
-
-    # calculate required thrust acceleration
     upward_acceleration = target_acceleration - gravity_sim
-
-    # limit maximum thrust acceleration
     acceleration_magnitude = np.linalg.norm(upward_acceleration)
 
+    # updating integral accumulator if it hasn't reached max value
+    if acceleration_magnitude <= max_upward_acceleration:
+        integral_error = proposed_integral_error
+    else:
+        # no wind up
+        pass
+
+    # thrust limits
     if acceleration_magnitude > max_upward_acceleration:
         upward_acceleration = (
             upward_acceleration
