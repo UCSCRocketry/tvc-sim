@@ -9,6 +9,12 @@ class PIDController:
         self.integral_limit = integral_limit
         self.integral_error = 0.0
         self.previous_error = None
+        
+
+    def set_gains(self, kP, kI, kD):
+        self.kP = math.fabs(kP)
+        self.kI = math.fabs(kI)
+        self.kD = math.fabs(kD)
 
 
     def reset(self):
