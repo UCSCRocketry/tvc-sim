@@ -1,75 +1,60 @@
 import matplotlib.pyplot as plt
+import numpy as np
+from util.pid_controller import PositionPID
 
 # define the simulation settings
 dt = 0.01
 total_time = 25.0
 GRAVITY = 9.81
+gravity = np.array([0.0, 0.0, -GRAVITY])
 
 # define the rocket's initial state
-y = 0.0
-velocity = 0.0
-
-# define a fictional upward acceleration for this classroom model
-upward_acceleration = 15.0
+position = np.zeros(3)
+velocity = np.zeros(3)
 
 # create lists to store results for plotting
 times = []
-ys = []
-velocities = []
+positions = []
 
 # PID
-target_y = 3.0
-kp = 0.8
-ki = 0.0
-kd = 0.8
+target = np.array([5.0, 5.0, 5.0])
 
-integral_error = 0.0
-max_upward_acceleration = 20.0
+max_thrust_acceleration = 20.0
+
+controller = PositionPID(Kp = [1.0, 1.0, 1.0],
+                        Ki=[1.0, 0.0, 0.0],
+                        Kd = [2.0, 2.0, 2.0],
+                        integral_limit = [10.0, 10.0, 10.0]
+                        )
 
 # run the simulation one small time step at a time
 for step in range(int(total_time / dt)):
-    time = step * dt
+    desired_acceleration = controller.update(
+        target, position, velocity, dt
+    )
 
-    error = target_y - y
+    thrust_acceleration = desired_acceleration - gravity
 
-    integral_error += error * dt
+    # find length of vector
+    magnitude = np.linalg.norm(thrust_acceleration) 
+    if magnitude > max_thrust_acceleration:
+        thrust_acceleration *= max_thrust_acceleration / magnitude
 
-    p_term = kp * error
-    i_term = ki * integral_error
-    d_term = -kd * velocity
+    acceleration = thrust_acceleration + gravity
 
-    acceleration_needed = GRAVITY + p_term + i_term + d_term
-
-    upward_acceleration = max(0.0, min(max_upward_acceleration, acceleration_needed))
-    acceleration = upward_acceleration - GRAVITY
-
-    # update velocity based on acceleration and elapsed time
     velocity += acceleration * dt
-
-    # update y based on the new velocity
-    y += velocity * dt
+    position += velocity * dt
 
     # prevent the rocket from moving below the ground
-    if y <= 0:
-        y = 0.0
+    if position[2] <= 0.0:
+        position[2] = 0.0
 
         # stop downward motion after reaching the ground
-        if velocity < 0:
-            velocity = 0.0
+        if velocity[2] < 0.0:
+            velocity[2] = 0.0
 
     # save the current values for plotting
-    times.append(time)
-    ys.append(y)
-    velocities.append(velocity)
+    times.append((step + 1) * dt)
+    positions.append(position.copy())
 
 
-
-# create a graph showing the rocket's y over time
-plt.plot(times, ys, label="rocket y")
-plt.xlabel("time (seconds)")
-plt.ylabel("y (meters)")
-plt.title("basic 1d rocket motion simulation")
-plt.grid(True)
-plt.axhline(target_y, color="red", linestyle="--", label="target height")
-plt.legend()
-plt.show()

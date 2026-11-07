@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 class PIDController:
     def __init__(self, kP, kI, kD, dt=0.01, integral_limit=7.5):
@@ -52,4 +53,33 @@ class PIDController:
             rate (float, optional): The rate of change of the current value. Defaults to None."""
         error = target - current
         return self.get_output(error, rate=rate)
-    
+
+
+class PositionPID:
+    def __init__(self, Kp, Ki, Kd, integral_limit):
+        self.controllers = [
+            PIDController(
+                kP=Kp[axis],
+                kI=Ki[axis],
+                kD=Kd[axis],
+                integral_limit=integral_limit[axis],
+            )
+            for axis in range(3)
+        ]
+
+    def update(self, target, position, velocity, dt):
+        output = np.zeros(3)
+
+        for axis, controller in enumerate(self.controllers):
+            controller.dt = dt
+            output[axis] = controller.calculate(
+                target[axis],
+                position[axis],
+                rate=velocity[axis],
+            )
+
+        return output
+
+    def reset(self):
+        for controller in self.controllers:
+            controller.reset()
