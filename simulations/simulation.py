@@ -58,3 +58,32 @@ for step in range(int(total_time / dt)):
     positions.append(position.copy())
 
 
+# Plot each position component against time in a separate figure.
+positions = np.asarray(positions)
+
+for axis, label in enumerate(["X", "Y", "Z"]):
+    fig, ax = plt.subplots()
+    ax.plot(times, positions[:, axis], label=f"{label} position")
+    ax.axhline(target[axis], color="red", linestyle=":", label="target")
+    ax.set_xlabel("Time (seconds)")
+    ax.set_ylabel(f"{label} (meters)")
+    ax.set_title(f"{label} Position vs. Time")
+    ax.grid(True)
+    ax.legend()
+    fig.tight_layout()
+
+# Plot the 3D trajectory alongside the separate position plots.
+fig = plt.figure()
+ax = fig.add_subplot(111, projection="3d")
+ax.plot(positions[:, 0], positions[:, 1], positions[:, 2], label="rocket trajectory")
+ax.scatter(0, 0, 0, color="green", label="start")
+ax.scatter(*target, color="red", marker="x", s=100, label="target")
+ax.set_xlabel("X (meters)")
+ax.set_ylabel("Y (meters)")
+ax.set_zlabel("Height (meters)")
+ax.set_title("3D Hopper Simulation")
+ax.grid(True)
+ax.legend()
+fig.tight_layout()
+
+plt.show()
